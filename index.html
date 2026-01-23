@@ -100,7 +100,7 @@
             const [showAdminLogin, setShowAdminLogin] = useState(false);
             const [showMappingManager, setShowMappingManager] = useState(false);
             
-            const ADMIN_PASSWORD = 'admin123'; // Change this to your desired password
+            const ADMIN_PASSWORD = 'whiteout7170'; // Change this to your desired password
             
             const days = [
                 { id: 1, label: 'Day 1 - Construction' },
@@ -287,12 +287,12 @@
             return (
                 <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-4">
                     <div className="max-w-6xl mx-auto">
-                        <div className="bg-white/10 backdrop-blur-md rounded-lg px-6 py-0 mb-6 border border-white/20">
+                        <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6 border border-white/20">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3 py-0">
+                                <div className="flex items-center gap-3">
                                     <Banner size={200} className="text-blue-200" />
                                     <div>
-                                        <h1 className="text-3xl font-bold text-white">State 525 SvS Prep Time Slots</h1>
+                                        <h1 className="text-5xl font-bold text-white">State 525 SvS Prep Time Slots</h1>
                                         <p className="text-blue-200 text-sm">24-Hour Coverage Schedule (UTC)</p>
                                     </div>
                                 </div>
@@ -414,8 +414,8 @@
                             </div>
                         </div>
 
-                        <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-4 border border-white/20 flex justify-between items-center">
-                            <div className="flex items-center gap-2 text-blue-100">
+                        <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-4 border border-white/20 flex justify-center items-center">
+                            <div className="flex items-center gap-2 text-blue-100 ">
                                 <Clock size={20} />
                                 <span className="font-semibold">Day {selectedDay} Schedule</span>
                                 <span className="text-sm">({getCoveragePercentage(selectedDay)}% Coverage)</span>
@@ -444,7 +444,7 @@
                                                 : 'bg-white/10 border-white/30 hover:border-blue-400/50'
                                         }`}
                                     >
-                                        <div className="text-xs font-bold text-blue-200 mb-2">
+                                        <div className="text-xs font-bold text-blue-200 mb-2 text-center">
                                             {slot.time}
                                         </div>
                                         
