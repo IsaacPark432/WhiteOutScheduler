@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whiteout Survival Battle Scheduler</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Lucide icons as inline SVG components
+        const Users = ({ size = 24, className = "" }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+        );
+        
+        const Trash2 = ({ size = 24, className = "" }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+        );
+        
+        const Clock = ({ size = 24, className = "" }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+        );
+        
+        const UserPlus = ({ size = 24, className = "" }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/>
+                <line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+        );
+        
+        const Shield = ({ size = 24, className = "" }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+        );
+
+        // Simple in-memory storage for standalone HTML
+        const storage = {
+            data: {},
+            async get(key) {
+                const stored = localStorage.getItem(key);
+                return stored ? { value: stored } : null;
+            },
+            async set(key, value) {
+                localStorage.setItem(key, value);
+                return { key, value };
+            },
+            async delete(key) {
+                localStorage.removeItem(key);
+                return { key, deleted: true };
+            }
+        };
+        
+        window.storage = storage;
+
+        function BattleScheduler() {
+            const [positions, setPositions] = useState({});
+            const [playerMapping, setPlayerMapping] = useState({});
+            const [playerId, setPlayerId] = useState('');
+            const [playerName, setPlayerName] = useState('');
+            const [selectedDay, setSelectedDay] = useState(1);
+            const [adminPassword, setAdminPassword] = useState('');
+            const [isAdmin, setIsAdmin] = useState(false);
+            const [showAdminLogin, setShowAdminLogin] = useState(false);
+            const [showMappingManager, setShowMappingManager] = useState(false);
+            
+            const ADMIN_PASSWORD = 'admin123'; // Change this to your desired password
+            
+            const days = [
+                { id: 1, label: 'Day 1' },
+                { id: 2, label: 'Day 2' },
+                { id: 3, label: 'Day 3' }
+            ];
+
+            const generateTimeSlots = () => {
+                const slots = [];
+                for (let hour = 0; hour < 24; hour++) {
+                    for (let half = 0; half < 2; half++) {
+                        const minutes = half === 0 ? '00' : '30';
+                        const hourStr = hour.toString().padStart(2, '0');
+                        const endHour = half === 1 ? (hour + 1).toString().padStart(2, '0') : hourStr;
+                        const endMin = half === 1 ? '00' : '30';
+                        slots.push({
+                            id: slots.length + 1,
+                            time: `${hourStr}:${minutes} - ${endHour}:${endMin} UTC`
+                        });
+                    }
+                }
+                return slots;
+            };
+
+            const timeSlots = generateTimeSlots();
+
+            useEffect(() => {
+                const loadData = async () => {
+                    try {
+                        const scheduleResult = await window.storage.get('battle-schedule');
+                        if (scheduleResult && scheduleResult.value) {
+                            setPositions(JSON.parse(scheduleResult.value));
+                        }
+                        
+                        const mappingResult = await window.storage.get('player-mapping');
+                        if (mappingResult && mappingResult.value) {
+                            setPlayerMapping(JSON.parse(mappingResult.value));
+                        }
+                    } catch (error) {
+                        console.log('No existing data found');
+                    }
+                };
+                loadData();
+            }, []);
+
+            const savePositions = async (newPositions) => {
+                try {
+                    await window.storage.set('battle-schedule', JSON.stringify(newPositions));
+                    setPositions(newPositions);
+                } catch (error) {
+                    console.error('Failed to save schedule:', error);
+                }
+            };
+
+            const savePlayerMapping = async (newMapping) => {
+                try {
+                    await window.storage.set('player-mapping', JSON.stringify(newMapping));
+                    setPlayerMapping(newMapping);
+                } catch (error) {
+                    console.error('Failed to save player mapping:', error);
+                }
+            };
+
+            useEffect(() => {
+                if (playerId && playerMapping[playerId]) {
+                    setPlayerName(playerMapping[playerId]);
+                }
+            }, [playerId, playerMapping]);
+
+            const addPlayerMapping = () => {
+                if (!playerId.trim()) {
+                    alert('Please enter a Player ID');
+                    return;
+                }
+                if (!playerName.trim()) {
+                    alert('Please enter a Player Name');
+                    return;
+                }
+                
+                const newMapping = {
+                    ...playerMapping,
+                    [playerId.trim()]: playerName.trim()
+                };
+                savePlayerMapping(newMapping);
+                alert('Player mapping saved!');
+            };
+
+            const claimSlot = (day, slotId) => {
+                if (!playerId.trim()) {
+                    alert('Please enter your Player ID first!');
+                    return;
+                }
+                
+                const key = `day${day}-slot${slotId}`;
+                
+                if (positions[key]) {
+                    alert('This slot is already claimed!');
+                    return;
+                }
+                
+                const newPositions = {
+                    ...positions,
+                    [key]: {
+                        playerId: playerId.trim(),
+                        playerName: playerName.trim() || playerMapping[playerId.trim()] || '',
+                        timestamp: new Date().toLocaleString()
+                    }
+                };
+                
+                if (playerName.trim() && !playerMapping[playerId.trim()]) {
+                    const newMapping = {
+                        ...playerMapping,
+                        [playerId.trim()]: playerName.trim()
+                    };
+                    savePlayerMapping(newMapping);
+                }
+                
+                savePositions(newPositions);
+            };
+
+            const releaseSlot = (day, slotId, slotPlayerId) => {
+                if (playerId.trim() !== slotPlayerId && !isAdmin) {
+                    alert('You can only release your own slots!');
+                    return;
+                }
+                
+                const key = `day${day}-slot${slotId}`;
+                const newPositions = { ...positions };
+                delete newPositions[key];
+                savePositions(newPositions);
+            };
+
+            const clearDay = async (day) => {
+                if (!isAdmin) {
+                    alert('Only admins can clear entire days!');
+                    return;
+                }
+                
+                if (window.confirm(`Clear all slots for Day ${day}? This cannot be undone!`)) {
+                    const newPositions = { ...positions };
+                    Object.keys(newPositions).forEach(key => {
+                        if (key.startsWith(`day${day}-`)) {
+                            delete newPositions[key];
+                        }
+                    });
+                    savePositions(newPositions);
+                }
+            };
+
+            const clearAll = async () => {
+                if (!isAdmin) {
+                    alert('Only admins can clear all slots!');
+                    return;
+                }
+                
+                if (window.confirm('Clear ALL days and slots? This cannot be undone!')) {
+                    try {
+                        await window.storage.delete('battle-schedule');
+                        setPositions({});
+                    } catch (error) {
+                        console.error('Failed to clear schedule:', error);
+                    }
+                }
+            };
+
+            const handleAdminLogin = () => {
+                if (adminPassword === ADMIN_PASSWORD) {
+                    setIsAdmin(true);
+                    setShowAdminLogin(false);
+                    alert('Admin access granted!');
+                } else {
+                    alert('Incorrect password!');
+                }
+            };
+
+            const getFilledSlotsForDay = (day) => {
+                return Object.keys(positions).filter(key => key.startsWith(`day${day}-`)).length;
+            };
+
+            const getCoveragePercentage = (day) => {
+                return Math.round((getFilledSlotsForDay(day) / 48) * 100);
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-4">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6 border border-white/20">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <Users size={32} className="text-blue-200" />
+                                    <div>
+                                        <h1 className="text-3xl font-bold text-white">State vs State Battle</h1>
+                                        <p className="text-blue-200 text-sm">24-Hour Coverage Schedule (UTC)</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    {!isAdmin ? (
+                                        <button
+                                            onClick={() => setShowAdminLogin(!showAdminLogin)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-purple-500/80 hover:bg-purple-600 text-white rounded-lg transition"
+                                        >
+                                            <Shield size={18} />
+                                            Admin
+                                        </button>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setShowMappingManager(!showMappingManager)}
+                                                className="flex items-center gap-2 px-4 py-2 bg-green-500/80 hover:bg-green-600 text-white rounded-lg transition"
+                                            >
+                                                <UserPlus size={18} />
+                                                Manage Players
+                                            </button>
+                                            <button
+                                                onClick={clearAll}
+                                                className="flex items-center gap-2 px-4 py-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg transition"
+                                            >
+                                                <Trash2 size={18} />
+                                                Clear All
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {showAdminLogin && !isAdmin && (
+                                <div className="mb-4 p-4 bg-purple-500/20 border border-purple-400/50 rounded-lg">
+                                    <h3 className="text-white font-semibold mb-2">Admin Login</h3>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="password"
+                                            value={adminPassword}
+                                            onChange={(e) => setAdminPassword(e.target.value)}
+                                            placeholder="Enter admin password"
+                                            className="flex-1 px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                                            onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+                                        />
+                                        <button
+                                            onClick={handleAdminLogin}
+                                            className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition"
+                                        >
+                                            Login
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {showMappingManager && isAdmin && (
+                                <div className="mb-4 p-4 bg-green-500/20 border border-green-400/50 rounded-lg">
+                                    <h3 className="text-white font-semibold mb-2">Player ID to Name Mapping</h3>
+                                    <div className="mb-3 max-h-40 overflow-y-auto">
+                                        {Object.keys(playerMapping).length === 0 ? (
+                                            <p className="text-blue-200 text-sm">No mappings yet</p>
+                                        ) : (
+                                            <div className="space-y-1">
+                                                {Object.entries(playerMapping).map(([id, name]) => (
+                                                    <div key={id} className="text-white text-sm bg-white/10 px-3 py-1 rounded">
+                                                        <span className="font-semibold">{id}</span> → {name}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            <div className="space-y-3 mb-4">
+                                <div className="flex gap-3">
+                                    <input
+                                        type="text"
+                                        value={playerId}
+                                        onChange={(e) => setPlayerId(e.target.value)}
+                                        placeholder="Player ID (Required)*"
+                                        className="flex-1 px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={playerName}
+                                        onChange={(e) => setPlayerName(e.target.value)}
+                                        placeholder="Player Name (Optional)"
+                                        className="flex-1 px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    />
+                                </div>
+                                {isAdmin && (
+                                    <button
+                                        onClick={addPlayerMapping}
+                                        className="w-full px-4 py-2 bg-green-500/80 hover:bg-green-600 text-white rounded-lg transition text-sm"
+                                    >
+                                        Save Player ID → Name Mapping
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3">
+                                {days.map(day => (
+                                    <button
+                                        key={day.id}
+                                        onClick={() => setSelectedDay(day.id)}
+                                        className={`flex-1 px-4 py-3 rounded-lg font-semibold transition ${
+                                            selectedDay === day.id
+                                                ? 'bg-blue-500 text-white'
+                                                : 'bg-white/20 text-blue-100 hover:bg-white/30'
+                                        }`}
+                                    >
+                                        <div>{day.label}</div>
+                                        <div className="text-sm font-normal">
+                                            {getFilledSlotsForDay(day.id)}/48 ({getCoveragePercentage(day.id)}%)
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-4 border border-white/20 flex justify-between items-center">
+                            <div className="flex items-center gap-2 text-blue-100">
+                                <Clock size={20} />
+                                <span className="font-semibold">Day {selectedDay} Schedule</span>
+                                <span className="text-sm">({getCoveragePercentage(selectedDay)}% Coverage)</span>
+                            </div>
+                            {isAdmin && (
+                                <button
+                                    onClick={() => clearDay(selectedDay)}
+                                    className="px-4 py-2 bg-red-500/60 hover:bg-red-600/80 text-white text-sm rounded-lg transition"
+                                >
+                                    Clear Day {selectedDay}
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {timeSlots.map((slot) => {
+                                const key = `day${selectedDay}-slot${slot.id}`;
+                                const claimed = positions[key];
+                                
+                                return (
+                                    <div
+                                        key={slot.id}
+                                        className={`relative p-3 rounded-lg border-2 transition ${
+                                            claimed
+                                                ? 'bg-green-500/20 border-green-400/50'
+                                                : 'bg-white/10 border-white/30 hover:border-blue-400/50'
+                                        }`}
+                                    >
+                                        <div className="text-xs font-bold text-blue-200 mb-2">
+                                            {slot.time}
+                                        </div>
+                                        
+                                        {claimed ? (
+                                            <div>
+                                                <div className="text-white font-semibold mb-0.5 text-sm break-all">
+                                                    {claimed.playerName || claimed.playerId}
+                                                </div>
+                                                {claimed.playerName && (
+                                                    <div className="text-xs text-blue-200 mb-1">
+                                                        ID: {claimed.playerId}
+                                                    </div>
+                                                )}
+                                                <button
+                                                    onClick={() => releaseSlot(selectedDay, slot.id, claimed.playerId)}
+                                                    className="w-full px-3 py-1 bg-red-500/80 hover:bg-red-600 text-white text-xs rounded transition"
+                                                >
+                                                    Release
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => claimSlot(selectedDay, slot.id)}
+                                                className="w-full px-3 py-1.5 bg-blue-500/80 hover:bg-blue-600 text-white text-xs font-medium rounded transition"
+                                            >
+                                                Claim Slot
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mt-6 bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20">
+                            <h3 className="text-white font-semibold mb-2">How to Use:</h3>
+                            <ul className="text-blue-100 text-sm space-y-1">
+                                <li>1. Enter your Player ID (required) and optionally your name</li>
+                                <li>2. Select which day (Day 1, 2, or 3)</li>
+                                <li>3. Claim any 30-minute time slot you can cover</li>
+                                <li>4. You can only release slots you've claimed yourself</li>
+                                <li>5. Admin can manage player mappings and clear schedules</li>
+                                <li>6. Once mapped, your name auto-fills when you enter your ID</li>
+                            </ul>
+                            <p className="text-blue-200 text-xs mt-3 italic">
+                                Note: All times are in UTC. Player names are stored and reused automatically!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<BattleScheduler />, document.getElementById('root'));
+    </script>
+</body>
+</html>
