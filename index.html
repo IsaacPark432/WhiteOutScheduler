@@ -365,6 +365,20 @@
                         }`}>
                             {isConnected ? '🟢 Live' : '🔴 Offline'}
                         </div>
+                         <div className="mt-6 bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20 text-center">
+                            <h3 className="text-white font-semibold mb-2 ">How to Use:</h3>
+                            <ul className="text-blue-100 text-sm space-y-1">
+                                <li>1. Enter your Player ID (required) and optionally your name</li>
+                                <li>2. Select which day (Day 1, 2, or 3)</li>
+                                <li>3. Claim any 30-minute time slot you can cover</li>
+                                <li>4. You can only release slots you've claimed yourself</li>
+                                <li>5. Updates are synchronized in real-time across all users!</li>
+                                <li>6. Admin can manage player mappings and clear schedules</li>
+                            </ul>
+                            <p className="text-blue-200 text-xs mt-3 italic">
+                                Note: All times are in UTC. Changes sync instantly with your team!
+                            </p>
+                        </div>
 
                         <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6 border border-white/20">
                             <div className="flex items-center justify-between mb-4">
@@ -555,21 +569,6 @@
                                     </div>
                                 );
                             })}
-                        </div>
-
-                        <div className="mt-6 bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20">
-                            <h3 className="text-white font-semibold mb-2">How to Use:</h3>
-                            <ul className="text-blue-100 text-sm space-y-1">
-                                <li>1. Enter your Player ID (required) and optionally your name</li>
-                                <li>2. Select which day (Day 1, 2, or 3)</li>
-                                <li>3. Claim any 30-minute time slot you can cover</li>
-                                <li>4. You can only release slots you've claimed yourself</li>
-                                <li>5. Updates are synchronized in real-time across all users!</li>
-                                <li>6. Admin can manage player mappings and clear schedules</li>
-                            </ul>
-                            <p className="text-blue-200 text-xs mt-3 italic">
-                                Note: All times are in UTC. Changes sync instantly with your team!
-                            </p>
                         </div>
                     </div>
                 </div>
