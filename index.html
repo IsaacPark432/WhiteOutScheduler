@@ -240,36 +240,49 @@
                     });
             };
 
-            const claimSlot = (day, slotId) => {
-                if (!playerId.trim()) {
-                    alert('Please enter your Player ID first!');
-                    return;
-                }
-                
-                const key = `day${day}-slot${slotId}`;
-                
-                if (positions[key]) {
-                    alert('This slot is already claimed!');
-                    return;
-                }
-                
-                const slotData = {
-                    playerId: playerId.trim(),
-                    playerName: playerName.trim() || playerMapping[playerId.trim()] || '',
-                    timestamp: new Date().toLocaleString()
-                };
-                
-                database.ref(`battle-schedule/${key}`).set(slotData)
-                    .then(() => {
-                        if (playerName.trim() && !playerMapping[playerId.trim()]) {
-                            database.ref(`player-mapping/${playerId.trim()}`).set(playerName.trim());
-                        }
-                    })
-                    .catch((error) => {
-                        console.error('Error claiming slot:', error);
-                        alert('Failed to claim slot');
-                    });
-            };
+           const claimSlot = (day, slotId) => {
+    if (!playerId.trim()) {
+        alert('Please enter your Player ID first!');
+        return;
+    }
+
+    const trimmedPlayerId = playerId.trim();
+
+    const alreadyClaimedToday = Object.entries(positions).some(
+        ([key, value]) =>
+            key.startsWith(`day${day}-`) &&
+            value?.playerId === trimmedPlayerId
+    );
+
+    if (alreadyClaimedToday) {
+        alert('You can only claim ONE slot per day!');
+        return;
+    }
+
+    const key = `day${day}-slot${slotId}`;
+
+    if (positions[key]) {
+        alert('This slot is already claimed!');
+        return;
+    }
+
+    const slotData = {
+        playerId: trimmedPlayerId,
+        playerName: playerName.trim() || playerMapping[trimmedPlayerId] || '',
+        timestamp: new Date().toLocaleString()
+    };
+
+    database.ref(`battle-schedule/${key}`).set(slotData)
+        .then(() => {
+            if (playerName.trim() && !playerMapping[trimmedPlayerId]) {
+                database.ref(`player-mapping/${trimmedPlayerId}`).set(playerName.trim());
+            }
+        })
+        .catch((error) => {
+            console.error('Error claiming slot:', error);
+            alert('Failed to claim slot');
+        });
+};
 
             const releaseSlot = (day, slotId, slotPlayerId) => {
                 if (playerId.trim() !== slotPlayerId && !isAdmin) {
