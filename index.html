@@ -9,85 +9,101 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- 🌨 Animated gradient + pulsing + snowflakes -->
-<body>
-  <!-- Snowflakes container -->
-  <div id="snow-container" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;"></div>
-
-  <div id="root" class="min-h-screen bg-transparent p-4" style="position:relative;z-index:10;"></div>
-
-  <script>
-  (function() {
-      const snowflakeCount = 50;
-      const container = document.getElementById('snow-container');
-
-      for (let i = 0; i < snowflakeCount; i++) {
-          const flake = document.createElement('div');
-          flake.className = 'snowflake';
-          flake.textContent = '❄';
-          flake.style.position = 'absolute';
-          flake.style.left = Math.random() * 100 + 'vw';
-          flake.style.top = Math.random() * 100 + 'vh';
-          flake.style.fontSize = Math.random() * 20 + 10 + 'px'; // bigger snowflakes
-          flake.style.opacity = Math.random() * 0.6 + 0.4;
-          flake.style.animation = `fall ${(Math.random() * 15 + 10)}s linear infinite`;
-          flake.style.animationDelay = Math.random() * 20 + 's';
-          container.appendChild(flake);
-      }
-  })();
-  </script>
-
-  <style>
-  body::before {
-      content: "";
-      position: fixed;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      z-index: -1;
-      background: linear-gradient(270deg, #1e3a8a, #3b82f6, #6366f1);
-      background-size: 600% 600%;
-      animation: gradientShift 30s ease infinite, pulse 20s ease-in-out infinite alternate;
-  }
-
-  @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-  }
-
-  @keyframes pulse {
-      0% { filter: brightness(0.8); }
-      50% { filter: brightness(1.2); }
-      100% { filter: brightness(0.8); }
-  }
-
-  @keyframes fall {
-      0% { transform: translateY(0) rotate(0deg); }
-      100% { transform: translateY(110vh) rotate(360deg); }
-  }
-
-  .snowflake {
-      pointer-events: none;
-      user-select: none;
-      font-family: serif;
-      color: white;
-      white-space: pre;
-  }
-  </style>
-
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
 
 <body>
-    <div id="root"></div>
+    <!-- Snowflakes container -->
+    <div id="snow-container" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;"></div>
+
+    <div id="root" class="min-h-screen bg-transparent p-4" style="position:relative;z-index:10;"></div>
+
+    <script>
+    (function() {
+        const snowflakeCount = 50;
+        const container = document.getElementById('snow-container');
+
+        for (let i = 0; i < snowflakeCount; i++) {
+            const flake = document.createElement('div');
+            flake.className = 'snowflake';
+            flake.textContent = '❄';
+            flake.style.position = 'absolute';
+            flake.style.left = Math.random() * 100 + 'vw';
+            flake.style.top = Math.random() * 100 + 'vh';
+            flake.style.fontSize = Math.random() * 20 + 10 + 'px';
+            flake.style.opacity = Math.random() * 0.6 + 0.4;
+            flake.style.animation = `fall ${(Math.random() * 15 + 10)}s linear infinite`;
+            flake.style.animationDelay = Math.random() * 20 + 's';
+            container.appendChild(flake);
+        }
+    })();
+    </script>
+
+    <style>
+    body::before {
+        content: "";
+        position: fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        z-index: -1;
+        background: linear-gradient(270deg, #1e3a8a, #3b82f6, #6366f1);
+        background-size: 600% 600%;
+        animation: gradientShift 30s ease infinite, pulse 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @keyframes pulse {
+        0% { filter: brightness(0.8); }
+        50% { filter: brightness(1.2); }
+        100% { filter: brightness(0.8); }
+    }
+
+    @keyframes fall {
+        0% { transform: translateY(0) rotate(0deg); }
+        100% { transform: translateY(110vh) rotate(360deg); }
+    }
+
+    .snowflake {
+        pointer-events: none;
+        user-select: none;
+        font-family: serif;
+        color: white;
+        white-space: pre;
+    }
+    </style>
     
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // Lucide icons as inline SVG components
+        // ============================================
+        // FIREBASE CONFIGURATION
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVisGtT6rYxBSa-Rr0ViESpT_s3zk0Qy0",
+            authDomain: "whiteoutstatedb.firebaseapp.com",
+            databaseURL: "https://whiteoutstatedb-default-rtdb.firebaseio.com/",
+            projectId: "whiteoutstatedb",
+            storageBucket: "whiteoutstatedb.firebasestorage.app",
+            messagingSenderId: "208146474818",
+            appId: "1:208146474818:web:746b2dddd20765cb608adb",
+            measurementId: "G-MLDN60Z5KW"
+        };
         
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Icon Components
         const Banner = ({ size = 24, className = "" }) => (
             <img
                 src="icons/alliance.png"
@@ -97,17 +113,6 @@
                 alt="icon" 
                 style={{ display: 'block' }}
             />
-        );
-
-
-        // This is an unused icon
-        const Users = ({ size = 24, className = "" }) => (
-            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
         );
         
         const Trash2 = ({ size = 24, className = "" }) => (
@@ -141,25 +146,6 @@
             </svg>
         );
 
-        // Simple in-memory storage for standalone HTML
-        const storage = {
-            data: {},
-            async get(key) {
-                const stored = localStorage.getItem(key);
-                return stored ? { value: stored } : null;
-            },
-            async set(key, value) {
-                localStorage.setItem(key, value);
-                return { key, value };
-            },
-            async delete(key) {
-                localStorage.removeItem(key);
-                return { key, deleted: true };
-            }
-        };
-        
-        window.storage = storage;
-
         function BattleScheduler() {
             const [positions, setPositions] = useState({});
             const [playerMapping, setPlayerMapping] = useState({});
@@ -170,8 +156,9 @@
             const [isAdmin, setIsAdmin] = useState(false);
             const [showAdminLogin, setShowAdminLogin] = useState(false);
             const [showMappingManager, setShowMappingManager] = useState(false);
+            const [isConnected, setIsConnected] = useState(false);
             
-            const ADMIN_PASSWORD = 'whiteout7170'; // Change this to your desired password
+            const ADMIN_PASSWORD = 'whiteout7170';
             
             const days = [
                 { id: 1, label: 'Day 1 - Construction' },
@@ -198,43 +185,37 @@
 
             const timeSlots = generateTimeSlots();
 
+            // FIREBASE REAL-TIME LISTENERS
             useEffect(() => {
-                const loadData = async () => {
-                    try {
-                        const scheduleResult = await window.storage.get('battle-schedule');
-                        if (scheduleResult && scheduleResult.value) {
-                            setPositions(JSON.parse(scheduleResult.value));
-                        }
-                        
-                        const mappingResult = await window.storage.get('player-mapping');
-                        if (mappingResult && mappingResult.value) {
-                            setPlayerMapping(JSON.parse(mappingResult.value));
-                        }
-                    } catch (error) {
-                        console.log('No existing data found');
-                    }
+                // Connection status
+                const connectedRef = database.ref('.info/connected');
+                connectedRef.on('value', (snapshot) => {
+                    setIsConnected(snapshot.val() === true);
+                });
+
+                // Listen to schedule changes
+                const scheduleRef = database.ref('battle-schedule');
+                scheduleRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    setPositions(data || {});
+                });
+
+                // Listen to player mapping changes
+                const mappingRef = database.ref('player-mapping');
+                mappingRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    setPlayerMapping(data || {});
+                });
+
+                // Cleanup listeners on unmount
+                return () => {
+                    connectedRef.off();
+                    scheduleRef.off();
+                    mappingRef.off();
                 };
-                loadData();
             }, []);
 
-            const savePositions = async (newPositions) => {
-                try {
-                    await window.storage.set('battle-schedule', JSON.stringify(newPositions));
-                    setPositions(newPositions);
-                } catch (error) {
-                    console.error('Failed to save schedule:', error);
-                }
-            };
-
-            const savePlayerMapping = async (newMapping) => {
-                try {
-                    await window.storage.set('player-mapping', JSON.stringify(newMapping));
-                    setPlayerMapping(newMapping);
-                } catch (error) {
-                    console.error('Failed to save player mapping:', error);
-                }
-            };
-
+            // Auto-fill name from mapping when player ID changes
             useEffect(() => {
                 if (playerId && playerMapping[playerId]) {
                     setPlayerName(playerMapping[playerId]);
@@ -251,12 +232,14 @@
                     return;
                 }
                 
-                const newMapping = {
-                    ...playerMapping,
-                    [playerId.trim()]: playerName.trim()
-                };
-                savePlayerMapping(newMapping);
-                alert('Player mapping saved!');
+                database.ref(`player-mapping/${playerId.trim()}`).set(playerName.trim())
+                    .then(() => {
+                        alert('Player mapping saved!');
+                    })
+                    .catch((error) => {
+                        console.error('Error saving mapping:', error);
+                        alert('Failed to save mapping');
+                    });
             };
 
             const claimSlot = (day, slotId) => {
@@ -272,24 +255,22 @@
                     return;
                 }
                 
-                const newPositions = {
-                    ...positions,
-                    [key]: {
-                        playerId: playerId.trim(),
-                        playerName: playerName.trim() || playerMapping[playerId.trim()] || '',
-                        timestamp: new Date().toLocaleString()
-                    }
+                const slotData = {
+                    playerId: playerId.trim(),
+                    playerName: playerName.trim() || playerMapping[playerId.trim()] || '',
+                    timestamp: new Date().toLocaleString()
                 };
                 
-                if (playerName.trim() && !playerMapping[playerId.trim()]) {
-                    const newMapping = {
-                        ...playerMapping,
-                        [playerId.trim()]: playerName.trim()
-                    };
-                    savePlayerMapping(newMapping);
-                }
-                
-                savePositions(newPositions);
+                database.ref(`battle-schedule/${key}`).set(slotData)
+                    .then(() => {
+                        if (playerName.trim() && !playerMapping[playerId.trim()]) {
+                            database.ref(`player-mapping/${playerId.trim()}`).set(playerName.trim());
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error claiming slot:', error);
+                        alert('Failed to claim slot');
+                    });
             };
 
             const releaseSlot = (day, slotId, slotPlayerId) => {
@@ -299,9 +280,12 @@
                 }
                 
                 const key = `day${day}-slot${slotId}`;
-                const newPositions = { ...positions };
-                delete newPositions[key];
-                savePositions(newPositions);
+                
+                database.ref(`battle-schedule/${key}`).remove()
+                    .catch((error) => {
+                        console.error('Error releasing slot:', error);
+                        alert('Failed to release slot');
+                    });
             };
 
             const clearDay = async (day) => {
@@ -311,13 +295,18 @@
                 }
                 
                 if (window.confirm(`Clear all slots for Day ${day}? This cannot be undone!`)) {
-                    const newPositions = { ...positions };
-                    Object.keys(newPositions).forEach(key => {
+                    const updates = {};
+                    Object.keys(positions).forEach(key => {
                         if (key.startsWith(`day${day}-`)) {
-                            delete newPositions[key];
+                            updates[`battle-schedule/${key}`] = null;
                         }
                     });
-                    savePositions(newPositions);
+                    
+                    database.ref().update(updates)
+                        .catch((error) => {
+                            console.error('Error clearing day:', error);
+                            alert('Failed to clear day');
+                        });
                 }
             };
 
@@ -328,12 +317,11 @@
                 }
                 
                 if (window.confirm('Clear ALL days and slots? This cannot be undone!')) {
-                    try {
-                        await window.storage.delete('battle-schedule');
-                        setPositions({});
-                    } catch (error) {
-                        console.error('Failed to clear schedule:', error);
-                    }
+                    database.ref('battle-schedule').remove()
+                        .catch((error) => {
+                            console.error('Error clearing schedule:', error);
+                            alert('Failed to clear schedule');
+                        });
                 }
             };
 
@@ -358,13 +346,22 @@
             return (
                 <div className="min-h-screen bg-transparent p-4">
                     <div className="max-w-6xl mx-auto">
+                        {/* Connection Status Indicator */}
+                        <div className={`fixed top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold z-50 ${
+                            isConnected 
+                                ? 'bg-green-500/80 text-white' 
+                                : 'bg-red-500/80 text-white'
+                        }`}>
+                            {isConnected ? '🟢 Live' : '🔴 Offline'}
+                        </div>
+
                         <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6 border border-white/20">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <Banner size={200} className="text-blue-200" />
                                     <div>
                                         <h1 className="text-5xl font-bold text-white">State 525 SvS Prep Time Slots</h1>
-                                        <p className="text-blue-200 text-sm">24-Hour Coverage Schedule (UTC)</p>
+                                        <p className="text-blue-200 text-sm">24-Hour Coverage Schedule (UTC) - Real-time Sync</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
@@ -485,8 +482,8 @@
                             </div>
                         </div>
 
-                        <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-4 border border-white/20 flex justify-center items-center">
-                            <div className="flex items-center gap-2 text-blue-100 ">
+                        <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-4 border border-white/20 flex justify-center items-center relative">
+                            <div className="flex items-center gap-2 text-blue-100">
                                 <Clock size={20} />
                                 <span className="font-semibold">Day {selectedDay} Schedule</span>
                                 <span className="text-sm">({getCoveragePercentage(selectedDay)}% Coverage)</span>
@@ -494,7 +491,7 @@
                             {isAdmin && (
                                 <button
                                     onClick={() => clearDay(selectedDay)}
-                                    className="px-4 py-2 bg-red-500/60 hover:bg-red-600/80 text-white text-sm rounded-lg transition"
+                                    className="px-4 py-2 bg-red-500/60 hover:bg-red-600/80 text-white text-sm rounded-lg transition absolute right-4"
                                 >
                                     Clear Day {selectedDay}
                                 </button>
@@ -509,13 +506,13 @@
                                 return (
                                     <div
                                         key={slot.id}
-                                        className={`relative p-3 rounded-lg border-2 transition ${
+                                        className={`relative p-3 rounded-lg border-2 transition text-center ${
                                             claimed
                                                 ? 'bg-green-500/20 border-green-400/50'
                                                 : 'bg-white/10 border-white/30 hover:border-blue-400/50'
                                         }`}
                                     >
-                                        <div className="text-xs font-bold text-blue-200 mb-2 text-center">
+                                        <div className="text-xs font-bold text-blue-200 mb-2">
                                             {slot.time}
                                         </div>
                                         
@@ -556,11 +553,11 @@
                                 <li>2. Select which day (Day 1, 2, or 3)</li>
                                 <li>3. Claim any 30-minute time slot you can cover</li>
                                 <li>4. You can only release slots you've claimed yourself</li>
-                                <li>5. Admin can manage player mappings and clear schedules</li>
-                                <li>6. Once mapped, your name auto-fills when you enter your ID</li>
+                                <li>5. Updates are synchronized in real-time across all users!</li>
+                                <li>6. Admin can manage player mappings and clear schedules</li>
                             </ul>
                             <p className="text-blue-200 text-xs mt-3 italic">
-                                Note: All times are in UTC. Player names are stored and reused automatically!
+                                Note: All times are in UTC. Changes sync instantly with your team!
                             </p>
                         </div>
                     </div>
