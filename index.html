@@ -371,7 +371,7 @@
                                 <li>1. Enter your Player ID (required) and optionally your name</li>
                                 <li>2. Select which day (Day 1, 2, 4)</li>
                                 <li>3. Claim any 30-minute time slot you can cover</li>
-                                <li>4. Updates are synchronized in real-time across all users</li>
+                                <li>4. If you need your time slot adjusted or moved, please contact the sitting president or [RES] alliance in game</li>
                             </ul>
                             <p className="text-blue-200 text-xs mt-3 italic">
                                 Note: All times are in UTC. Changes sync instantly with your team!
@@ -549,6 +549,14 @@
                                                         ID: {claimed.playerId}
                                                     </div>
                                                 )}
+                                                {isAdmin && (
+                                                <button
+                                                    onClick={() => releaseSlot(selectedDay, slot.id, claimed.playerId)}
+                                                    className="w-full px-3 py-1 bg-red-500/80 hover:bg-red-600 text-white text-xs rounded transition"
+                                                >
+                                                    Release
+                                                </button>
+                                            )}
                                             </div>
                                         ) : (
                                             <button
